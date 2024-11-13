@@ -10,7 +10,7 @@ import (
 	"os"
 	"sort"
 
-	"github.com/golang/protobuf/proto"
+	v2 "google.golang.org/protobuf/proto"
 )
 
 const (
@@ -98,11 +98,11 @@ type RecordOption struct {
 type ProtoBufferOption struct {
 	// RequestUnmarshaler is used to unmarshal protocol buffer encoded request body.
 	// This is used for generating human readable request example (json format).
-	RequestUnmarshaler proto.Unmarshaler
+	RequestProto v2.Messaage
 
 	// ResponseUnmarshaler is used to unmarshal protocol buffer encoded response body.
 	// This is used for generating human readable response example (json format).
-	ResponseUnmarshaler proto.Unmarshaler
+	ResponseProto v2.Message
 }
 
 // Data represents a request or response parameter value. Normally, you don't need to modify this.
