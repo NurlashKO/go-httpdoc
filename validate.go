@@ -8,8 +8,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/tenntenn/gpath"
+	v2 "google.golang.org/protobuf/proto"
 )
 
 var (
@@ -26,11 +26,11 @@ var (
 	}
 
 	protoUnmarshalFunc = func(data []byte, v interface{}) error {
-		unmashaler, ok := v.(proto.Unmarshaler)
+		unmashaler, ok := v.(v2.Message)
 		if !ok {
 			return fmt.Errorf("failed to type assert to Unmashaler: %T must implement proto.Unmarshaler interface", v)
 		}
-		return unmashaler.Unmarshal(data)
+		return v2.Unmarshal(data, unmashaler)
 	}
 )
 
@@ -74,11 +74,10 @@ type record struct {
 //
 // TestCase can be used like table-driven way.
 //
-//   validator.RequestParams(t, []httpdoc.TestCase{
-//       NewTestCase("token","12345","Request token"),
-//       NewTestCase("pretty","true","Pretty print response message"),
-//	 })
-//
+//	  validator.RequestParams(t, []httpdoc.TestCase{
+//	      NewTestCase("token","12345","Request token"),
+//	      NewTestCase("pretty","true","Pretty print response message"),
+//		 })
 type TestCase struct {
 	Target      string
 	Expected    interface{}
@@ -169,14 +168,13 @@ func (v *Validator) ResponseHeaders(t *testing.T, cases []TestCase) {
 // expression in TestCase.Target. For example, if you want to access `Email` value in the
 // following struct use `Setting.Name` in Target.
 //
-//   type User struct {
-//       Setting Setting
-//   }
+//	type User struct {
+//	    Setting Setting
+//	}
 //
-//   type Setting struct {
-//       Email string
-//   }
-//
+//	type Setting struct {
+//	    Email string
+//	}
 func (v *Validator) RequestBody(t *testing.T, cases []TestCase, request interface{}) {
 	// Unmarshal request body into the given struct
 	if err := v.unmarshalFunc(v.record.requestBody, request); err != nil {
@@ -191,14 +189,13 @@ func (v *Validator) RequestBody(t *testing.T, cases []TestCase, request interfac
 // expression in TestCase.Target. For example, if you want to access `Email` value in the
 // following struct use `Setting.Name` in Target.
 //
-//   type User struct {
-//       Setting Setting
-//   }
+//	type User struct {
+//	    Setting Setting
+//	}
 //
-//   type Setting struct {
-//       Email string
-//   }
-//
+//	type Setting struct {
+//	    Email string
+//	}
 func (v *Validator) ResponseBody(t *testing.T, cases []TestCase, response interface{}) {
 	// Unmarshal request body into the given struct
 	if err := v.unmarshalFunc(v.record.responseBody, response); err != nil {

@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/proto"
+	v2 "google.golang.org/protobuf/proto"
 )
 
 type User struct {
@@ -323,7 +324,7 @@ func TestValidateFields(t *testing.T) {
 }
 
 func TestValidator_RequestBody_Proto(t *testing.T) {
-	buf, err := proto.Marshal(&UserProtoRequest{
+	buf, err := v2.Marshal(&UserProtoRequest{
 		Id:   12345,
 		Name: "tcnksm",
 	})
@@ -344,7 +345,7 @@ func TestValidator_RequestBody_Proto(t *testing.T) {
 			}
 			customIDCalledAssertFunc = true
 		}},
-	}, &UserProtoRequest{})
+	}, proto.MessageV2(&UserProtoRequest{}))
 
 	if customIDCalledAssertFunc == false {
 		t.Fatal("custom id AssertFunc should be called.")
@@ -354,7 +355,7 @@ func TestValidator_RequestBody_Proto(t *testing.T) {
 	validator.assertFunc = testAssertWithCount(&got)
 	validator.RequestBody(t, []TestCase{
 		NewTestCase("Id", 123, ""),
-	}, &UserProtoRequest{})
+	}, proto.MessageV2(&UserProtoRequest{}))
 
 	if want := 1; got != want {
 		t.Fatalf("expect valiate fails %d, got %d", want, got)
@@ -362,7 +363,7 @@ func TestValidator_RequestBody_Proto(t *testing.T) {
 }
 
 func TestValidator_ResponseBody_Proto(t *testing.T) {
-	buf, err := proto.Marshal(&UserProtoResponse{
+	buf, err := v2.Marshal(&UserProtoResponse{
 		Id: 667854,
 		Setting: &UserProtoResponse_Setting{
 			Email: "httpdoc@example.com",

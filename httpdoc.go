@@ -2,7 +2,6 @@ package httpdoc
 
 import (
 	"bytes"
-	"encoding/json"
 	"io"
 	"io/ioutil"
 	"log"
@@ -10,6 +9,7 @@ import (
 	"os"
 	"sort"
 
+	"google.golang.org/protobuf/encoding/protojson"
 	v2 "google.golang.org/protobuf/proto"
 )
 
@@ -98,7 +98,7 @@ type RecordOption struct {
 type ProtoBufferOption struct {
 	// RequestUnmarshaler is used to unmarshal protocol buffer encoded request body.
 	// This is used for generating human readable request example (json format).
-	RequestProto v2.Messaage
+	RequestProto v2.Message
 
 	// ResponseUnmarshaler is used to unmarshal protocol buffer encoded response body.
 	// This is used for generating human readable response example (json format).
@@ -189,30 +189,22 @@ func Record(next http.Handler, document *Document, opt *RecordOption) http.Handl
 		responseExample := string(rw.responseBody)
 		if opt.WithProtoBuffer != nil {
 			// FIXME(tcnksm): Want to use jsonpb but sometimes panic happens while marshalling....
-			if unmarshaler := opt.WithProtoBuffer.RequestUnmarshaler; unmarshaler != nil {
-				unmarshaler.Unmarshal(requestBody.Bytes())
-
-				var buf bytes.Buffer
-				encoder := json.NewEncoder(&buf)
-				encoder.Encode(unmarshaler)
-				s := buf.String()
-				buf.Reset()
-				json.Indent(&buf, []byte(s), "", "  ")
-
-				requestExample = buf.String()
+			if unmarshaler := opt.WithProtoBuffer.RequestProto; unmarshaler != nil {
+				v2.Unmarshal(requestBody.Bytes(), unmarshaler)
+				requestExample = protojson.Format(unmarshaler)
 			}
 
-			if unmarshaler := opt.WithProtoBuffer.ResponseUnmarshaler; unmarshaler != nil {
-				unmarshaler.Unmarshal(rw.responseBody)
+			if unmarshaler := opt.WithProtoBuffer.ResponseProto; unmarshaler != nil {
+				v2.Unmarshal(rw.responseBody, unmarshaler)
 
-				var buf bytes.Buffer
-				encoder := json.NewEncoder(&buf)
-				encoder.Encode(unmarshaler)
-				s := buf.String()
-				buf.Reset()
-				json.Indent(&buf, []byte(s), "", "  ")
+				//var buf bytes.Buffer
+				//encoder := json.NewEncoder(&buf)
+				//encoder.Encode(unmarshaler)
+				//s := buf.String()
+				//buf.Reset()
+				//json.Indent(&buf, []byte(s), "", "  ")
 
-				responseExample = buf.String()
+				responseExample = protojson.Format(unmarshaler)
 			}
 		}
 

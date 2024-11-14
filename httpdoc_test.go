@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/golang/protobuf/proto"
+	v2 "google.golang.org/protobuf/proto"
 )
 
 var (
@@ -35,7 +35,7 @@ var (
 			Name:   "tcnksm",
 			Active: true,
 		}
-		buf, _ := response.Marshal()
+		buf, _ := v2.Marshal(response)
 
 		w.WriteHeader(http.StatusOK)
 		w.Header().Add("Content-Type", "application/protobuf")
@@ -182,7 +182,7 @@ func TestRecord_Proto(t *testing.T) {
 		recordOption  *RecordOption
 		requestMethod string
 		requestParam  string
-		requestBody   proto.Marshaler
+		requestBody   v2.Message
 		want          Entry
 	}{
 		{
@@ -191,16 +191,16 @@ func TestRecord_Proto(t *testing.T) {
 			&RecordOption{
 				ExcludeHeaders: testExcludeHeaders,
 				WithProtoBuffer: &ProtoBufferOption{
-					RequestUnmarshaler:  &UserProtoRequest{},
-					ResponseUnmarshaler: &UserProtoResponse{},
+					RequestProto:  (&UserProtoRequest{}),
+					ResponseProto: (&UserProtoResponse{}),
 				},
 			},
 			"GET",
 			"",
-			&UserProtoRequest{
+			(&UserProtoRequest{
 				Id:   7089,
 				Name: "tcnksm",
-			},
+			}),
 			Entry{
 				Description: "",
 				Method:      "GET",
@@ -210,21 +210,19 @@ func TestRecord_Proto(t *testing.T) {
 				RequestHeaders: []Data{},
 				RequestFields:  nil,
 				RequestExample: `{
-  "id": 7089,
-  "name": "tcnksm"
-}
-`,
+  "Id":  7089,
+  "Name":  "tcnksm"
+}`,
 
 				ResponseStatusCode: http.StatusOK,
 				ResponseHeaders: []Data{
 					{"Content-Type", "application/protobuf", ""},
 				},
 				ResponseExample: `{
-  "id": 7089,
-  "name": "tcnksm",
-  "active": true
-}
-`,
+  "Id":  7089,
+  "Name":  "tcnksm",
+  "Active":  true
+}`,
 			},
 		},
 	}
@@ -236,7 +234,7 @@ func TestRecord_Proto(t *testing.T) {
 		testServer := httptest.NewServer(mux)
 
 		client := http.DefaultClient
-		buf, err := tc.requestBody.Marshal()
+		buf, err := v2.Marshal(tc.requestBody)
 		if err != nil {
 			t.Fatal(err)
 		}
